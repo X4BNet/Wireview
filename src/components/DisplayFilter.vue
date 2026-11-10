@@ -1,6 +1,7 @@
 <script setup>
 import { onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from "vue";
-import { manager } from "../globals";
+import { useManager } from "../globals";
+const manager = useManager();
 import FilterApplyIcon from "./icons/FilterApplyIcon.vue";
 
 const isFilterValid = ref(null);
@@ -15,25 +16,27 @@ watch(
       return;
     }
 
-    const result = await manager.checkFilter(filter);
-    isFilterValid.value = result.ok;
+    try {
+      const result = await manager.checkFilter(filter);
+      if (displayFilterInput.value === filter) isFilterValid.value = result.ok;
+    } catch { isFilterValid.value = false; }
   }
 );
 
 const handleSubmit = () => {
-  manager.setDisplayFilter(displayFilterInput.value);
+  manager.setDisplayFilter(displayFilterInput.value).catch(() => { isFilterValid.value = false; });
 };
 
 // Ctrl-/ or Command-/
 const handleGlobalKeydown = (event) => {
-  if (event.key === "/" && !event.shiftKey && event.ctrlKey ^ event.metaKey) {
+  if (event.key === "/" && !event.shiftKey && (event.ctrlKey !== event.metaKey)) {
     event.preventDefault();
     inputRef.value.focus();
   }
 };
-onMounted(() => document.body.addEventListener("keydown", handleGlobalKeydown));
+onMounted(() => inputRef.value.closest(".wireview").addEventListener("keydown", handleGlobalKeydown));
 onBeforeUnmount(() =>
-  document.body.removeEventListener("keydown", handleGlobalKeydown)
+  inputRef.value?.closest(".wireview")?.removeEventListener("keydown", handleGlobalKeydown)
 );
 </script>
 <template>
@@ -42,6 +45,7 @@ onBeforeUnmount(() =>
       <input
         type="text"
         name="dfilter"
+        aria-label="Display filter"
         ref="dfilter"
         v-model="displayFilterInput"
         :placeholder="
@@ -85,8 +89,8 @@ onBeforeUnmount(() =>
   flex-grow: 1;
 
   display: flex;
-  background-color: white;
-  border: 1px solid gray;
+  background-color: var(--ws-almost-white);
+  border: var(--ws-pane-border);
   border-radius: 3px;
   overflow: hidden;
 }
@@ -98,6 +102,8 @@ onBeforeUnmount(() =>
 }
 .filter-container .filter-bar input[type="text"] {
   flex-grow: 1;
+  width: 0;
+  color: var(--ws-fg);
   outline: none;
   border: none;
   background-color: var(--ws-display-filter-bg);
@@ -109,13 +115,14 @@ onBeforeUnmount(() =>
   padding: 0;
   outline: none;
 
-  height: 14px;
+  min-width: 32px;
+  height: 28px;
   display: flex;
   justify-content: center;
   align-items: center;
   align-self: center;
   margin: 0 5px;
-  filter: brightness(1.75);
+  filter: none;
   opacity: 0.9;
 }
 .apply-filter:disabled {

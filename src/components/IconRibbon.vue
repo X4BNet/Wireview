@@ -1,145 +1,34 @@
 <script setup>
-import OpenFileIcon from "./icons/OpenFileIcon.vue";
-import SaveCaptureIcon from "./icons/SaveCaptureIcon.vue";
-import CloseCaptureIcon from "./icons/CloseCaptureIcon.vue";
-import ReloadCaptureIcon from "./icons/ReloadCaptureIcon.vue";
-import FindIcon from "./icons/FindIcon.vue";
-import PreviousPacketIcon from "./icons/PreviousPacketIcon.vue";
-import NextPacketIcon from "./icons/NextPacketIcon.vue";
-import { manager } from "../globals";
-import PcapFileInput from "../PcapFileInput.vue";
-import GoFirstIcon from "./icons/GoFirstIcon.vue";
-import GoLastIcon from "./icons/GoLastIcon.vue";
+import OpenFileIcon from './icons/OpenFileIcon.vue';
+import FindIcon from './icons/FindIcon.vue';
+import PreviousPacketIcon from './icons/PreviousPacketIcon.vue';
+import NextPacketIcon from './icons/NextPacketIcon.vue';
+import GoFirstIcon from './icons/GoFirstIcon.vue';
+import GoLastIcon from './icons/GoLastIcon.vue';
+import { useManager, useViewOptions } from '../globals';
+import PcapFileInput from '../PcapFileInput.vue';
+const manager = useManager();
+const options = useViewOptions();
 </script>
-
 <template>
-  <div class="ribbon">
-    <label class="icon" title="Open capture file">
-      <OpenFileIcon />
-
-      <PcapFileInput />
-    </label>
-    <div class="icon disabled" title="Save capture file">
-      <SaveCaptureIcon />
-    </div>
-    <div
-      class="icon"
-      :class="{ disabled: manager.sessionInfo === null }"
-      title="Close this capture file"
-      @click="() => manager.closeFile()"
-    >
-      <CloseCaptureIcon />
-    </div>
-    <div class="icon disabled" title="Reload this file">
-      <ReloadCaptureIcon />
-    </div>
-    <div class="separator"></div>
-    <div
-      class="icon"
-      :class="{ disabled: manager.sessionInfo === null }"
-      title="Find a packet"
-      @mousedown.prevent
-      @mouseup="() => manager.setFindFrameBarHidden()"
-    >
-      <FindIcon />
-    </div>
-    <!-- In Firefox, the css :active selector does not fire if we run
-    event.preventDefault() on the mousedown event. We need to prevent default
-    so that focus is not lost (from, say, a currently focused row) -->
-    <div
-      class="icon"
-      :class="{
-        disabled: !manager.canGoToPreviousPacket,
-      }"
-      title="Go to the previous packet"
-      @mousedown.prevent
-      @mouseup="() => manager.goToNearbyPacket(-1)"
-    >
-      <PreviousPacketIcon />
-    </div>
-    <div
-      class="icon"
-      :class="{
-        disabled: !manager.canGoToNextPacket,
-      }"
-      title="Go to the next packet"
-      @mousedown.prevent
-      @mouseup="() => manager.goToNearbyPacket(1)"
-    >
-      <NextPacketIcon />
-    </div>
-    <div
-      class="icon"
-      :class="{
-        disabled: !manager.canGoToPreviousPacket,
-      }"
-      title="Go to the first packet"
-      @mousedown.prevent
-      @mouseup="() => manager.setActiveFrameIndex(0)"
-    >
-      <GoFirstIcon />
-    </div>
-    <div
-      class="icon"
-      :class="{
-        disabled: !manager.canGoToNextPacket,
-      }"
-      title="Go to the last packet"
-      @mousedown.prevent
-      @mouseup="() => manager.setActiveFrameIndex(-1)"
-    >
-      <GoLastIcon />
-    </div>
+  <div class="ribbon" role="toolbar" aria-label="Packet navigation">
+    <label v-if="!options.embedded" class="icon" title="Open capture file"><OpenFileIcon /><PcapFileInput /></label>
+    <button v-if="!options.embedded" type="button" class="icon" :disabled="!manager.sessionInfo" @click="manager.closeFile()">Close</button>
+    <button type="button" class="icon" title="Find a packet" aria-label="Find a packet" :disabled="!manager.sessionInfo" @click="manager.setFindFrameBarHidden()"><FindIcon /></button>
+    <span class="separator"></span>
+    <button type="button" class="icon" title="First packet" aria-label="First packet" :disabled="!manager.canGoToPreviousPacket" @click="manager.setActiveFrameIndex(0)"><GoFirstIcon /></button>
+    <button type="button" class="icon" title="Previous packet" aria-label="Previous packet" :disabled="!manager.canGoToPreviousPacket" @click="manager.goToNearbyPacket(-1)"><PreviousPacketIcon /></button>
+    <button type="button" class="icon" title="Next packet" aria-label="Next packet" :disabled="!manager.canGoToNextPacket" @click="manager.goToNearbyPacket(1)"><NextPacketIcon /></button>
+    <button type="button" class="icon" title="Last packet" aria-label="Last packet" :disabled="!manager.canGoToNextPacket" @click="manager.setActiveFrameIndex(-1)"><GoLastIcon /></button>
   </div>
 </template>
-
 <style scoped>
-.ribbon {
-  background: linear-gradient(
-    to bottom,
-    var(--ws-lighter-gray),
-    var(--ws-light-gray)
-  );
-  padding: 4px;
-  display: flex;
-  align-items: center;
-  gap: 1px;
-}
-.icon {
-  padding: 3px;
-  display: flex;
-  border: 1px solid transparent;
-  border-radius: 4px;
-}
-.icon:hover {
-  background: linear-gradient(
-    to bottom,
-    var(--ws-almost-white),
-    var(--ws-gray)
-  );
-  border-color: var(--ws-darkest-gray);
-}
-.icon:active {
-  background: var(--ws-dark-gray);
-}
-.icon.disabled,
-.icon:has(input[disabled]) {
-  pointer-events: none;
-  filter: saturate(0);
-  opacity: 0.75;
-}
-.icon input[type="file"] {
-  display: none;
-}
-.separator {
-  margin: 0 2px 0 3px;
-  width: 2px;
-  height: 50%;
-  background-color: var(--ws-dark-gray);
-  border-right: 1px solid var(--ws-almost-white);
-}
-a.demo {
-  color: #555;
-  text-decoration: 1px underline dotted;
-}
+.ribbon { background: var(--ws-light-gray); padding: 4px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px; flex-shrink: 0; }
+.icon { padding: 5px; display: flex; justify-content: center; align-items: center; border: 1px solid transparent; border-radius: 4px; min-width: 32px; min-height: 32px; background: transparent; }
+.icon svg { width: 20px; height: 20px; }
+.icon:hover:not(:disabled) { background: var(--ws-gray); border-color: var(--ws-darker-gray); }
+.icon:has(input[disabled]) { pointer-events: none; opacity: .45; }
+.icon input[type="file"] { display: none; }
+.separator { margin: 0 4px; width: 1px; height: 22px; background: var(--ws-gray); }
+@media (max-width: 767px) { .icon { min-width: 44px; } }
 </style>

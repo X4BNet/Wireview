@@ -21,19 +21,20 @@ export const calculateFontSize = (height) => {
 export const toHexColor = (number, fallbackHex = "f00") =>
   `#${number?.toString(16)?.padStart(6, "0") ?? fallbackHex}`;
 
-export const watchMouseDragMove = ({ clientX, clientY }, callback) => {
-  const handleMouseMove = (event) => {
-    if ((event.buttons & 1) !== 1) {
-      window.removeEventListener("mousemove", handleMouseMove);
-      return;
-    }
-    callback({
-      deltaX: event.clientX - clientX,
-      deltaY: event.clientY - clientY,
-    });
-  };
-
-  window.addEventListener("mousemove", handleMouseMove);
+/** Track mouse, pen and touch drags and release document listeners on cancellation. */
+export const watchMouseDragMove = (event, callback) => {
+  const { clientX, clientY, pointerId } = event;
+  const target = event.currentTarget || event.target;
+  target.setPointerCapture?.(pointerId);
+  const controller = new AbortController();
+  const cleanup = () => controller.abort();
+  window.addEventListener("pointermove", (move) => {
+    if (move.pointerId !== pointerId) return;
+    callback({ deltaX: move.clientX - clientX, deltaY: move.clientY - clientY });
+  }, { signal: controller.signal });
+  for (const type of ["pointerup", "pointercancel", "pagehide", "blur"]) window.addEventListener(type, cleanup, { signal: controller.signal, once: true });
+  target.addEventListener("lostpointercapture", cleanup, { signal: controller.signal, once: true });
+  return cleanup;
 };
 
 export const isNullish = (value) => (value ?? null) === null;

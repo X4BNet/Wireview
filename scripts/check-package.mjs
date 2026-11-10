@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import { readFile, stat } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+const output = path.resolve(process.env.WIREVIEW_PACKAGE_DIR || path.join(tmpdir(), 'wireview-package'));
+const pkg = JSON.parse(await readFile(path.join(output, 'package.json'), 'utf8'));
+assert.equal(pkg.name, '@x4bnet/wireview');
+assert.equal(pkg.private, undefined);
+if (process.env.GITHUB_REF_TYPE === 'tag') assert.equal(process.env.GITHUB_REF_NAME, `v${pkg.version}`);
+for (const name of ['dist/wireview.js', 'dist/style.css', 'dist/assets/worker.js', 'dist/assets/wiregasm.js', 'dist/assets/wiregasm.wasm', 'dist/assets/wiregasm.bmp', 'LICENSE', 'README.md']) assert.ok((await stat(path.join(output, name))).size > 0, name);
+assert.ok((await stat(path.join(output, 'dist/assets/wiregasm.wasm'))).size < 256 * 1024 * 1024);
+console.log(`Verified ${pkg.name}@${pkg.version}`);

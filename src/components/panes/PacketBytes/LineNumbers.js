@@ -1,5 +1,5 @@
 import { h } from "vue";
-import { manager } from "../../../globals";
+import { useManager } from "../../../globals";
 
 const spacers = {
   hexadecimal: { every1: " ", every8: "  " },
@@ -24,6 +24,7 @@ export default {
     },
   },
   setup(props) {
+    const manager = useManager();
     return () => {
       const bytes = manager.activeFrameDetails.getSourceData(props.sourceIndex);
       const lineCount = bytes.length / props.bytesPerLine;

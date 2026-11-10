@@ -5,18 +5,21 @@ import {
   shallowReactive,
   useTemplateRef,
   watch,
+  onBeforeUnmount,
 } from "vue";
 import { useResizeObserver, useScroll, watchThrottled } from "@vueuse/core";
 import { areArraysEqual, clamp } from "../../util";
-import { manager } from "../../globals";
+import { useManager } from "../../globals";
+const manager = useManager();
 import Minimap from "./PacketList/Minimap.vue";
 import PacketTable from "./PacketList/PacketTable.vue";
 import PacketTableRows from "./PacketList/PacketTableRows.vue";
 
 // Row code
-const headerHeight = 20; // TODO: use resizeObserver to set this?
+const headerHeight = 32; // TODO: use resizeObserver to set this?
 
 const state = reactive({
+  rowHeight: manager.rowHeight,
   clientHeight: 0,
   clientWidth: 0,
 
@@ -45,8 +48,8 @@ state.scrollY = useScroll(() => state.scrollableRef).y;
 
 state.rowCount = computed(() => {
   const availableHeight = Math.max(0, state.clientHeight - headerHeight);
-  const fullRows = Math.floor(availableHeight / manager.rowHeight);
-  console.debug("fullRows", fullRows, "availableHeight", availableHeight);
+  const fullRows = Math.floor(availableHeight / state.rowHeight);
+
   return fullRows;
 });
 
@@ -56,12 +59,12 @@ state.extraRows = computed(() =>
 
 state.scrollYPercent = computed(() =>
   // clamping is required because many mobile browsers under/overscroll
-  clamp(0, state.extraRows ? state.scrollY / state.extraRows : 0, 1)
+  clamp(0, state.extraRows ? state.scrollY / state.rowHeight / state.extraRows : 0, 1)
 );
 
 state.firstRowIndex = computed(() => {
-  const clamped = clamp(0, state.scrollY, state.extraRows);
-  console.debug("scrollY", state.scrollY, "fri", clamped);
+  const clamped = clamp(0, Math.floor(state.scrollY / state.rowHeight), state.extraRows);
+
   return clamped;
 });
 state.visibleTableWidth = computed(() => state.clientWidth - minimapWidth);
@@ -88,7 +91,9 @@ state.frameReqArgsForTable = computed(() => [
 useResizeObserver(
   () => state.scrollableRef,
   () => {
-    state.clientHeight = state.scrollableRef.clientHeight;
+    const element = state.scrollableRef;
+    state.rowHeight = parseFloat(getComputedStyle(element).getPropertyValue('--ws-row-height')) || manager.rowHeight;
+    state.clientHeight = element.clientHeight;
     state.clientWidth = state.scrollableRef.clientWidth;
   }
 );
@@ -130,12 +135,15 @@ const updateRowsForTable = () => {
 
 let framesRequest = null;
 const requestFrames = async () => {
-  if (framesRequest) return;
+  if (framesRequest || state.clientHeight <= 0) return;
   const reqArgs = state.frameReqArgs;
   const [filter, skip, limit] = reqArgs;
   framesRequest = manager.getFrames(filter, skip, limit);
   // await new Promise((resolve) => setTimeout(resolve, 1000));
-  const { frames, offset } = await framesRequest;
+  let frames, offset;
+  try { ({ frames, offset } = await framesRequest); }
+  catch { framesRequest = null; return; }
+  if (!state.scrollableRef?.isConnected) return;
   framesRequest = null;
 
   shallowState.frameBank = { frames, offset, reqArgs };
@@ -150,13 +158,6 @@ watch(() => state.frameReqArgsForTable, updateRowsForTable);
 
 const minimapWidth = 34;
 
-// Scrolling via mousewheel scrolls too much because a row contributes only 1px to the scrollbar
-const handleWheel = (event) => {
-  if (!event.deltaY) return;
-  event.preventDefault();
-  state.scrollY += Math.round(event.deltaY / manager.rowHeight);
-};
-
 // ensure that active row is in viewport
 // may not be in viewport already due to keyboard navigation
 watch(
@@ -164,11 +165,10 @@ watch(
   (index) => {
     if (index === null) return;
 
-    console.log("idx", index, state.firstRowIndex, document.activeElement);
     if (index < state.firstRowIndex)
-      state.scrollY -= state.firstRowIndex - index;
+      state.scrollY -= (state.firstRowIndex - index) * state.rowHeight;
     else if (index >= state.firstRowIndex + state.rowCount)
-      state.scrollY += index - (state.firstRowIndex + state.rowCount) + 1;
+      state.scrollY += (index - (state.firstRowIndex + state.rowCount) + 1) * state.rowHeight;
   }
 );
 </script>
@@ -177,7 +177,6 @@ watch(
   <div
     class="packet-list-scrollable"
     ref="packet-list-scrollable"
-    @wheel="handleWheel"
   >
     <div
       class="content"
@@ -197,7 +196,7 @@ watch(
     </div>
     <div
       :style="{
-        height: state.extraRows + 'px',
+        height: state.extraRows * state.rowHeight + 'px',
       }"
     ></div>
   </div>
@@ -212,7 +211,8 @@ watch(
 .content {
   position: sticky;
   top: 0;
-  width: 100%;
+  min-width: 100%;
+  width: max-content;
   height: 100%;
 
   display: flex;

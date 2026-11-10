@@ -1,6 +1,6 @@
 import { h } from "vue";
 import BytesFormatter from "../../../classes/BytesFormatter";
-import { manager } from "../../../globals";
+import { useManager } from "../../../globals";
 
 const spacers = {
   hexadecimal: { every1: " ", every8: "  " },
@@ -32,6 +32,7 @@ export default {
     },
   },
   setup(props) {
+    const manager = useManager();
     return () => {
       const spacer = spacers[props.displayFormat];
       const bytes = manager.activeFrameDetails.getSourceData(props.sourceIndex);

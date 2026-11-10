@@ -1,0 +1,35 @@
+name: Publish Wireview package
+on:
+  push:
+    tags: ['v*.*.*']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      WIREVIEW_PACKAGE_DIR: ${{ runner.temp }}/wireview-package
+      npm_config_cache: ${{ runner.temp }}/npm-cache
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://npm.pkg.github.com
+          scope: '@x4bnet'
+      - run: npm ci --no-fund --no-audit --no-progress
+      - run: npm test
+      - run: npm run build -- --outDir '${{ runner.temp }}/wireview-standalone'
+      - run: npm run build:lib
+      - run: npm run check:package
+      - run: npm pack "$WIREVIEW_PACKAGE_DIR" --pack-destination '${{ runner.temp }}' --dry-run
+      - name: Publish tagged release
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: npm publish "$WIREVIEW_PACKAGE_DIR" --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

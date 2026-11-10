@@ -1,5 +1,6 @@
 <script setup>
-import { manager } from "../../../globals";
+import { useManager } from "../../../globals";
+const manager = useManager();
 import Row from "./Row.vue";
 
 const { table } = defineProps({
@@ -31,7 +32,7 @@ const handleRowKeydown = (event) => {
   }
 
   const rowCount = table.frames.length - 1;
-  console.log(event);
+
   if (event.key === "PageUp") {
     event.preventDefault();
     manager.goToNearbyPacket(-rowCount);

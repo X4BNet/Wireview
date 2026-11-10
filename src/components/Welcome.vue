@@ -1,25 +1,28 @@
 <script setup>
 import { computed, reactive } from "vue";
 import PcapFileInput from "../PcapFileInput.vue";
-import { manager } from "../globals";
+import { useManager } from "../globals";
+const manager = useManager();
 
 const state = reactive({
   downloadingExample: false,
+  error: "",
 
   // computed
   statusText: null,
 });
 
 const loadDemo = (event) => {
+  if (state.error) return state.error;
   if (state.downloadingExample) return;
   state.downloadingExample = true;
-  fetch(event.target.href)
+  fetch(new URL("shark1.pcapng", location.href))
     .then((response) => response.arrayBuffer())
     .then((buffer) => {
       state.downloadingExample = false;
       const file = new File([buffer], "shark1.pcapng");
-      manager.openFile(file);
-    });
+      return manager.openFile(file);
+    }).catch((error) => { state.downloadingExample = false; state.error = error.message; });
 };
 
 state.statusText = computed(() => {
@@ -53,7 +56,7 @@ state.statusText = computed(() => {
         </p>
         <p>
           <a
-            href="https://github.com/radiantly/Wireview"
+            href="https://github.com/X4BNet/Wireview"
             target="_blank"
             class="muted"
             >View the project source on GitHub.</a
@@ -96,7 +99,7 @@ p {
   max-width: 80ch;
 }
 h2 {
-  color: #888;
+  color: var(--ws-muted);
   margin: 0;
 }
 section {
@@ -116,9 +119,9 @@ a.muted:hover {
 
   display: flex;
   justify-content: center;
-  background-color: white;
+  background-color: var(--ws-almost-white);
   line-height: 1.5;
-  color: #111;
+  color: var(--ws-fg);
 }
 .welcome-container {
   width: 80vw;

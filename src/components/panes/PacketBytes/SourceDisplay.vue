@@ -2,7 +2,8 @@
 import { computed, reactive, watch } from "vue";
 import BytesDisplay from "./BytesDisplay";
 import LineNumbers from "./LineNumbers";
-import { manager } from "../../../globals";
+import { useManager } from "../../../globals";
+const manager = useManager();
 
 const props = defineProps({
   sourceIndex: {
@@ -28,9 +29,9 @@ state.bytesPerLine = computed(() =>
 state.containerStyles = computed(() => {
   if (state.activeDetailId === null) return {};
   return {
-    [`--ws-linenumber-fg-${state.activeDetailId}`]: "#666",
-    [`--ws-detail-fg-${state.activeDetailId}`]: "white",
-    [`--ws-detail-bg-${state.activeDetailId}`]: "#3f3f3f",
+    [`--ws-linenumber-fg-${state.activeDetailId}`]: "var(--ws-muted)",
+    [`--ws-detail-fg-${state.activeDetailId}`]: "var(--ws-selected-fg)",
+    [`--ws-detail-bg-${state.activeDetailId}`]: "var(--ws-selected-bg)",
   };
 });
 
@@ -40,13 +41,14 @@ const handleMouseover = (event) => {
   state.activeDetailId = detailId;
 };
 
-const handleMousedown = () => {
+const handleMousedown = (event) => {
+  handleMouseover(event);
   if (state.activeDetailId) manager.setActiveFieldInfo(state.activeDetailId);
 };
 
 watch(
   () => manager.activeFieldInfo,
-  ({ ptr }) => (state.activeDetailId = ptr)
+  (field) => (state.activeDetailId = field?.ptr ?? null)
 );
 </script>
 
@@ -67,7 +69,7 @@ watch(
       :bytesPerLine="state.bytesPerLine"
       :sourceIndex
       @mouseover="handleMouseover"
-      @mousedown="handleMousedown"
+      @pointerdown="handleMousedown"
     />
     <BytesDisplay
       class="display text"
@@ -75,7 +77,7 @@ watch(
       :bytesPerLine="state.bytesPerLine"
       :sourceIndex
       @mouseover="handleMouseover"
-      @mousedown="handleMousedown"
+      @pointerdown="handleMousedown"
     />
   </div>
 </template>
@@ -89,13 +91,13 @@ watch(
   flex-grow: 1;
 
   display: flex;
-  background-color: white;
+  background-color: var(--ws-almost-white);
   font-family: var(--ws-font-family-monospace);
   font-size: var(--ws-font-size-monospace);
   line-height: var(--ws-row-height);
   width: 100%;
   min-height: 0;
-  overflow-y: auto;
+  overflow: auto;
 }
 .line-numbers {
   color: var(--ws-darkest-gray);
@@ -108,7 +110,7 @@ watch(
   height: fit-content;
 }
 .display {
-  color: black;
+  color: var(--ws-fg);
   background-color: transparent;
   white-space: pre-wrap;
   flex-shrink: 0;

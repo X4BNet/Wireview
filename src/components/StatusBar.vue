@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive } from "vue";
-import { manager } from "../globals";
+import { useManager } from "../globals";
+const manager = useManager();
 import GitHubIcon from "./icons/GitHubIcon.vue";
 import { useInterval } from "../composables.js";
 
@@ -57,7 +58,7 @@ useInterval(updateLoader, 1000);
 </script>
 <template>
   <div class="status-bar">
-    <div>{{ state.bridgeLoader || "Wireview by radiantly" }}</div>
+    <div>{{ state.bridgeLoader || "Wireview · Wireshark" }}</div>
     <div style="flex-grow: 1"></div>
     <div>
       {{ state.packetCountInfo }}
@@ -65,7 +66,7 @@ useInterval(updateLoader, 1000);
     <div style="flex-grow: 1"></div>
     <a
       class="github"
-      href="https://github.com/radiantly/Wireview"
+      href="https://github.com/X4BNet/Wireview"
       aria-label="Visit the Wireview project page on GitHub"
       target="_blank"
     >
@@ -77,16 +78,22 @@ useInterval(updateLoader, 1000);
 <style scoped>
 .status-bar {
   display: flex;
-  padding: 2px 5px;
+  padding: 6px 10px;
+  gap: 8px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--ws-muted);
+  border-top: var(--ws-pane-border);
 }
 .github {
   display: flex;
   min-width: 0;
   min-height: 0;
-  height: 100%;
+  height: 16px;
   overflow: hidden;
 }
 .github svg {
-  height: 100%;
+  height: 16px;
 }
 </style>

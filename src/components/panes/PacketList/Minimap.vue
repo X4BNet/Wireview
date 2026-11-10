@@ -1,72 +1,40 @@
 <script setup>
-import { computed, reactive, useTemplateRef, watch } from "vue";
-import { manager } from "../../../globals";
-import { toHexColor } from "../../../util.js";
-
-const { frameInfo, width, height } = defineProps({
-  frameInfo: {
-    type: Object,
-  },
-  width: {
-    type: Number,
-    required: true,
-  },
-  height: {
-    type: Number,
-    required: true,
-  },
-});
-
-const state = reactive({
-  // refs
-  canvasRef: useTemplateRef("minimap-canvas"),
-
-  // computed
-  canvasWidth: 0,
-  canvasHeight: 0,
-});
-
-// subtract border px
-state.canvasWidth = computed(() => Math.floor(width - 2));
-state.canvasHeight = computed(() => Math.floor(height - 2));
-
-watch([() => frameInfo, () => manager.activeFrameNumber], () => {
-  const frames = frameInfo?.frames ?? [];
-  const context = state.canvasRef.getContext("2d");
-  for (let i = 0; i < state.canvasHeight; i++) {
-    const frameIdx = frameInfo.offset + i;
-    if (frameIdx < frames.length) {
-      const frame = frames[frameIdx];
-      if (manager.activeFrameNumber === frame.number)
-        context.fillStyle = "#404040";
-      else context.fillStyle = toHexColor(frame.bg);
-    } else context.fillStyle = "white";
-    context.fillRect(0, i, state.canvasRef.width, 1);
+import { watch, useTemplateRef, onMounted, onBeforeUnmount } from 'vue';
+import { useManager } from '../../../globals';
+import { toHexColor } from '../../../util';
+const manager = useManager();
+const props = defineProps({ frameInfo: Object, width: Number, height: Number });
+const canvas = useTemplateRef('minimap-canvas');
+let observer;
+const paint = () => {
+  const el = canvas.value;
+  if (!el || !props.frameInfo) return;
+  const style = getComputedStyle(el);
+  const surface = style.getPropertyValue('--ws-almost-white').trim();
+  const selection = style.getPropertyValue('--ws-selected-bg').trim();
+  const mix = style.getPropertyValue('--ws-protocol-mix').trim();
+  const context = el.getContext('2d');
+  context.fillStyle = surface;
+  context.fillRect(0, 0, el.width, el.height);
+  const { frames, offset = 0 } = props.frameInfo;
+  for (let y = 0; y < el.height && y + offset < frames.length; y++) {
+    const frame = frames[y + offset];
+    context.fillStyle = manager.activeFrameNumber === frame.number ? selection : `color-mix(in srgb, ${toHexColor(frame.bg)} ${mix}, ${surface})`;
+    context.fillRect(0, y, el.width, 1);
   }
+};
+watch([() => props.frameInfo, () => manager.activeFrameNumber, () => props.height], paint, { flush: 'post' });
+const media = matchMedia('(prefers-color-scheme: dark)');
+onMounted(() => {
+  observer = new MutationObserver(paint);
+  observer.observe(canvas.value.closest('.wireview'), { attributes: true, attributeFilter: ['data-theme'] });
+  media.addEventListener('change', paint); paint();
 });
+onBeforeUnmount(() => { observer?.disconnect(); media.removeEventListener('change', paint); });
 </script>
-
-<template>
-  <div class="minimap">
-    <canvas
-      ref="minimap-canvas"
-      :width="state.canvasWidth"
-      :height="state.canvasHeight"
-    ></canvas>
-  </div>
-</template>
-
+<template><div class="minimap" aria-hidden="true"><canvas ref="minimap-canvas" :width="Math.max(0, width - 2)" :height="Math.max(0, height - 2)"></canvas></div></template>
 <style scoped>
-.minimap {
-  flex-shrink: 0;
-
-  position: sticky;
-  right: 0;
-
-  background-color: white;
-  border: 1px solid var(--ws-darker-gray);
-}
-.minimap canvas {
-  display: block;
-}
+.minimap { flex-shrink: 0; position: sticky; right: 0; background: var(--ws-almost-white); border-left: var(--ws-pane-border); }
+.minimap canvas { display: block; }
+@media (max-width: 767px) { .minimap { display: none; } }
 </style>

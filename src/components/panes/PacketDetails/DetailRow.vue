@@ -46,7 +46,7 @@ watch(
 
 <template>
   <div
-    class="row"
+    class="wv-row"
     ref="dt-row"
     :class="{ collapsed }"
     :tabindex="active ? 0 : -1"
@@ -61,15 +61,15 @@ watch(
 </template>
 
 <style scoped>
-.row {
+.wv-row {
   display: flex;
   position: relative;
 }
-.row[tabindex="0"] {
+.wv-row[tabindex="0"] {
   background-color: var(--ws-selected-unfocused-bg);
   color: var(--ws-selected-unfocused-fg);
 }
-.row[tabindex="0"]::after {
+.wv-row[tabindex="0"]::after {
   content: "";
   position: absolute;
   top: 0;
@@ -80,34 +80,34 @@ watch(
   border-top: 1px solid var(--ws-selected-bg);
   border-bottom: 1px solid var(--ws-selected-bg);
 }
-.row:focus {
+.wv-row:focus {
   background-color: var(--ws-selected-bg);
   color: var(--ws-selected-fg);
 }
-.row > * {
+.wv-row > * {
   flex-shrink: 0;
 }
-.row > .indent {
+.wv-row > .indent {
   pointer-events: none;
 }
-.row .triangle {
+.wv-row .triangle {
   width: 20px;
 
   display: flex;
   justify-content: center;
   align-items: center;
 }
-.row .triangle svg {
+.wv-row .triangle svg {
   width: 7px;
   height: 7px;
   object-fit: contain;
   fill: var(--ws-darkest-gray);
   pointer-events: none;
 }
-.row.collapsed .triangle svg {
+.wv-row.collapsed .triangle svg {
   transform: rotateZ(-90deg);
 }
-.row .label {
+.wv-row .label {
   white-space: nowrap;
 }
 </style>

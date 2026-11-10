@@ -1,59 +1,83 @@
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-:root {
-  font-weight: 400;
-
-  --ws-almost-white: #fefefe;
-  --ws-lighter-gray: #fbfbfb;
-  --ws-light-gray: #f0f0f0;
-  --ws-gray: #e7e7e7;
-  --ws-dark-gray: #dadada;
-  --ws-darker-gray: #b9b9b9;
-  --ws-darkest-gray: #ababab;
-
-  --ws-selected-bg: #404040;
-  --ws-selected-fg: var(--ws-almost-white);
-  --ws-selected-unfocused-bg: var(--ws-light-gray);
-  --ws-selected-unfocused-fg: #12272e;
-
-  --ws-font-family-monospace: monospace;
-  --ws-font-monospace: var(--ws-font-family-monospace);
-  --ws-font-family-sans-serif: "Segoe UI", sans-serif;
-  --ws-font-sans-serif: 9pt var(--ws-font-family-sans-serif);
-
-  --ws-ugly-red: #660000;
-  --ws-ugly-green: #006600;
-  --ws-nice-blue: #97c4f0;
-  --ws-hmmm-yellow: #ffffdc;
-
-  --ws-pane-border: 1px solid var(--ws-darker-gray);
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-html,
-body {
-  margin: 0;
-  height: 100vh;
-  overflow: hidden;
-}
-
-body {
-  background-color: var(--ws-light-gray);
+.wireview {
+  --ws-almost-white: #ffffff;
+  --ws-lighter-gray: #f8fafc;
+  --ws-light-gray: #f1f5f9;
+  --ws-gray: #e2e8f0;
+  --ws-dark-gray: #cbd5e1;
+  --ws-darker-gray: #94a3b8;
+  --ws-darkest-gray: #64748b;
+  --ws-fg: #172b3a;
+  --ws-muted: #526477;
+  --ws-selected-bg: #155eaa;
+  --ws-selected-fg: #ffffff;
+  --ws-selected-unfocused-bg: #dbeafe;
+  --ws-selected-unfocused-fg: #143c66;
+  --ws-ugly-red: #fee2e2;
+  --ws-ugly-green: #dcfce7;
+  --ws-nice-blue: #dbeafe;
+  --ws-hmmm-yellow: #fef9c3;
+  --ws-font-family-monospace: ui-monospace, SFMono-Regular, Consolas, monospace;
+  --ws-font-family-sans-serif: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ws-font-sans-serif: 13px var(--ws-font-family-sans-serif);
+  --ws-pane-border: 1px solid var(--ws-gray);
+  --ws-protocol-mix: 100%;
+  --ws-protocol-fg: initial;
   font: var(--ws-font-sans-serif);
+  color: var(--ws-fg);
+  background: var(--ws-light-gray);
+  color-scheme: light;
+  width: 100%; height: 100%; min-width: 0; min-height: 0;
+  display: flex; flex-direction: column; overflow: hidden;
+  font-synthesis: none; text-rendering: optimizeLegibility;
 }
-
-#app {
-  width: 100%;
-  height: 100vh;
-
-  display: flex;
-  flex-direction: column;
+.wireview[data-theme="dark"] {
+  --ws-almost-white: #161f2b;
+  --ws-lighter-gray: #202c3b;
+  --ws-light-gray: #1a2635;
+  --ws-gray: #344458;
+  --ws-dark-gray: #44576e;
+  --ws-darker-gray: #688098;
+  --ws-darkest-gray: #93a8bf;
+  --ws-fg: #e5edf5;
+  --ws-muted: #a6b8ca;
+  --ws-selected-bg: #275c99;
+  --ws-selected-fg: #ffffff;
+  --ws-selected-unfocused-bg: #203f62;
+  --ws-selected-unfocused-fg: #e0efff;
+  --ws-ugly-red: #622d37;
+  --ws-ugly-green: #214f40;
+  --ws-nice-blue: #27496e;
+  --ws-hmmm-yellow: #514629;
+  --ws-protocol-mix: 16%;
+  --ws-protocol-fg: var(--ws-fg);
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+  .wireview[data-theme="auto"] {
+    --ws-almost-white: #161f2b; --ws-lighter-gray: #202c3b;
+    --ws-light-gray: #1a2635; --ws-gray: #344458;
+    --ws-dark-gray: #44576e; --ws-darker-gray: #688098;
+    --ws-darkest-gray: #93a8bf; --ws-fg: #e5edf5; --ws-muted: #a6b8ca;
+    --ws-selected-bg: #275c99; --ws-selected-fg: #ffffff;
+    --ws-selected-unfocused-bg: #203f62; --ws-selected-unfocused-fg: #e0efff;
+    --ws-ugly-red: #622d37; --ws-ugly-green: #214f40;
+    --ws-nice-blue: #27496e; --ws-hmmm-yellow: #514629;
+    --ws-protocol-mix: 16%; --ws-protocol-fg: var(--ws-fg); color-scheme: dark;
+  }
+}
+.wireview *, .wireview *::before, .wireview *::after { box-sizing: border-box; }
+.wireview button, .wireview input, .wireview select {
+  font: inherit; color: inherit; min-width: 0;
+}
+.wireview button, .wireview select, .wireview input[type="text"] { background-color: var(--ws-almost-white); }
+.wireview button { cursor: pointer; }
+.wireview button:disabled { cursor: default; opacity: .45; }
+.wireview :focus-visible { outline: 2px solid var(--ws-selected-bg); outline-offset: -2px; }
+.wireview a { color: inherit; }
+.wireview .wv-message { padding: 14px 18px; color: var(--ws-muted); }
+.wireview .wv-error { color: var(--ws-fg); background: var(--ws-ugly-red); }
+.wireview .wv-loading { flex: 1; display: grid; place-content: center; }
+@media (max-width: 767px) {
+  .wireview { --ws-row-height: 40px !important; --ws-font-size-monospace: 13px !important; font-size: 14px; }
+  .wireview button, .wireview select, .wireview input[type="text"] { min-height: 44px; }
 }

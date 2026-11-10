@@ -1,6 +1,7 @@
 <script setup>
 import DetailTree from "./PacketDetails/DetailTree.js";
-import { manager } from "../../globals";
+import { useManager } from "../../globals";
+const manager = useManager();
 import { reactive } from "vue";
 
 const state = reactive({
@@ -28,7 +29,7 @@ const state = reactive({
   display: flex;
   flex-direction: column;
 
-  background-color: white;
+  background-color: var(--ws-almost-white);
   font-family: var(--ws-font-family-monospace);
   font-size: var(--ws-font-size-monospace);
   line-height: var(--ws-row-height);

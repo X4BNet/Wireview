@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, watch } from "vue";
-import { manager } from "../../globals";
+import { useManager } from "../../globals";
+const manager = useManager();
 import SourceDisplay from "./PacketBytes/SourceDisplay.vue";
 import DataSourceTabBar from "./PacketBytes/DataSourceTabBar.vue";
 

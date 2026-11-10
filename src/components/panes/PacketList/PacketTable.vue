@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, watch } from "vue";
-import { manager } from "../../../globals";
+import { useManager } from "../../../globals";
+const manager = useManager();
 import { watchMouseDragMove } from "../../../util";
 
 // TODO: Allow for column reordering
@@ -69,7 +70,7 @@ const handleColumnResize = (event, columnIndex) => {
 </script>
 
 <template>
-  <div class="table" :style="state.columnWidthStyles">
+  <div class="wv-table" :style="state.columnWidthStyles">
     <div class="header">
       <div
         v-for="(col, index) in manager.columns"
@@ -79,7 +80,7 @@ const handleColumnResize = (event, columnIndex) => {
         <div
           class="h-resize"
           :title="'Width: ' + state.columnWidths[index]"
-          @mousedown="(e) => handleColumnResize(e, index)"
+          @pointerdown.prevent="(e) => handleColumnResize(e, index)"
         ></div>
       </div>
     </div>
@@ -88,15 +89,15 @@ const handleColumnResize = (event, columnIndex) => {
 </template>
 
 <style scoped>
-.table {
+.wv-table {
   flex-grow: 1;
   align-items: stretch;
-  background-color: white;
+  background-color: var(--ws-almost-white);
 }
-.table.invisible {
+.wv-table.invisible {
   opacity: 0;
 }
-.table > .header {
+.wv-table > .header {
   display: flex;
   font: var(--ws-font-sans-serif);
   background: linear-gradient(
@@ -107,31 +108,32 @@ const handleColumnResize = (event, columnIndex) => {
   border-bottom: var(--ws-pane-border);
   user-select: none;
 }
-.table > .header > div {
+.wv-table > .header > div {
   display: flex;
   align-items: stretch;
   flex-shrink: 0;
   min-width: 0;
 }
-.table > .header .text {
+.wv-table > .header .text {
   flex-grow: 1;
   padding: 2px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: clip;
 }
-.table > .header .h-resize {
+.wv-table > .header .h-resize {
   width: 1px;
   background-color: var(--ws-darker-gray);
   cursor: e-resize;
   position: relative;
 }
-.table > .header .h-resize::after {
+.wv-table > .header .h-resize::after {
   content: "";
   position: absolute;
   top: 0;
   left: -3px;
   height: 100%;
-  width: 7px;
+  width: 12px;
+  touch-action: none;
 }
 </style>

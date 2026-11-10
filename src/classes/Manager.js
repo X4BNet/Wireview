@@ -1,20 +1,21 @@
 import { computed, reactive, shallowReactive, watch } from "vue";
-import { calculateFontSize, clamp } from "../util";
-import Bridge from "./Bridge";
-import FrameDetailsTree from "./FrameDetailsTree";
+import { clamp } from "../util.js";
+import Bridge from "./Bridge.js";
+import FrameDetailsTree from "./FrameDetailsTree.js";
 
 class Manager {
   #core;
   #state;
   #shallowState;
+  #disposed = false;
 
-  constructor() {
+  constructor(options) {
     this.#core = {
-      bridge: new Bridge(),
+      bridge: new Bridge(options),
       checkFilterCache: new Map(),
     };
     this.#state = reactive({
-      rowHeight: 14, // TODO: Originally I thought we'd manipulate this to change text size, but in-browser zoom seems to work fine for this
+      rowHeight: 28, // TODO: Originally I thought we'd manipulate this to change text size, but in-browser zoom seems to work fine for this
       activeFrameIndex: null,
       displayFilter: "",
       findFrameBarHidden: true,
@@ -36,7 +37,7 @@ class Manager {
       lastFileOpenError: false,
     });
     this.#state.fontSize = computed(() =>
-      calculateFontSize(this.#state.rowHeight)
+      14
     );
     this.#state.activeFrameNumber = computed(() => {
       const index = this.#state.activeFrameIndex;
@@ -76,10 +77,10 @@ class Manager {
           promise: this.#core.bridge.getFrames(filter, 0, 0),
           frameNumber,
         };
-        const frames = await this.#shallowState.filteredFramesRequest.promise;
-
-        // the display filter may have changed while awaiting
-        if (filter !== this.#state.displayFilter) return;
+        const request = this.#shallowState.filteredFramesRequest;
+        let frames;
+        try { frames = await request.promise; } catch { return; }
+        if (this.#disposed || request !== this.#shallowState.filteredFramesRequest || filter !== this.#state.displayFilter) return;
 
         this.#shallowState.filteredFrames = frames;
         this.#shallowState.filteredFramesRequest.frameNumber = null;
@@ -96,7 +97,10 @@ class Manager {
           this.#shallowState.activeFrameDetails = null;
           return;
         }
-        const rawFrameDetails = await this.#core.bridge.getFrame(frameNumber);
+        let rawFrameDetails;
+        try { rawFrameDetails = await this.#core.bridge.getFrame(frameNumber); } catch { return; }
+        if (this.#disposed || frameNumber !== this.#state.activeFrameNumber) return;
+        this.#shallowState.activeFieldInfo = null;
         this.#shallowState.activeFrameDetails = new FrameDetailsTree(
           rawFrameDetails
         );
@@ -230,13 +234,11 @@ class Manager {
   }
 
   initialize() {
-    this.#core.bridge.initialize();
-
-    // FOR DEBUG
-    window.manager = this;
+    return this.#core.bridge.initialize();
   }
 
   deinitialize() {
+    this.#disposed = true;
     this.#core.bridge.deinitialize();
   }
 
@@ -244,7 +246,12 @@ class Manager {
     if (this.#shallowState.activeFile) await this.closeFile();
 
     this.#shallowState.activeFile = file;
-    const result = await this.#core.bridge.createSession(file);
+    let result;
+    try { result = await this.#core.bridge.createSession(file); }
+    catch (error) {
+      this.#shallowState.activeFile = null;
+      throw error;
+    }
 
     // handle error
     if (result.code) {
@@ -253,16 +260,22 @@ class Manager {
         filename: file.name,
       };
       this.#shallowState.activeFile = null;
-      this.#core.bridge.closeSession();
-      return;
+      await this.#core.bridge.closeSession();
+      throw new Error(result.error || `Unable to parse ${file.name}`);
     }
 
+    if (this.#disposed) throw new Error("Wireview was closed");
     this.#shallowState.sessionInfo = result.summary;
     this.#state.activeFrameIndex = result.summary.packet_count ? 0 : null;
   }
 
   async closeFile() {
     this.#state.activeFrameIndex = null;
+    this.#state.displayFilter = "";
+    this.#shallowState.filteredFrames = null;
+    this.#shallowState.filteredFramesRequest = null;
+    this.#shallowState.activeFieldInfo = null;
+    this.#core.checkFilterCache.clear();
     this.#shallowState.sessionInfo = null;
     this.#shallowState.lastFileOpenError = null;
     this.#shallowState.activeFile = null;

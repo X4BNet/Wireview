@@ -1,7 +1,7 @@
 import { h, reactive, watch } from "vue";
 import DetailRow from "./DetailRow.vue";
 import FrameDetailsTree from "../../../classes/FrameDetailsTree";
-import { manager } from "../../../globals";
+import { useManager } from "../../../globals";
 
 export default {
   props: {
@@ -11,6 +11,7 @@ export default {
     },
   },
   setup(props) {
+    const manager = useManager();
     const state = reactive({
       collapsed: new Map(),
     });
@@ -45,9 +46,9 @@ export default {
       { immediate: true }
     );
 
-    const onMousedown = (event) => {
+    const onPointerdown = (event) => {
       const detailId = getDetailId(event.target);
-      console.log(event, detailId);
+
       if (detailId === null) return;
 
       manager.setActiveFieldInfo(detailId);
@@ -121,7 +122,7 @@ export default {
       const children = props.details.tree.flatMap((detail) => toVnode(detail));
       return h(
         "div",
-        { class: "children", onMousedown, onDblclick, onFocusin, onKeydown },
+        { class: "children", onPointerdown, onDblclick, onFocusin, onKeydown },
         children
       );
     };

@@ -1,113 +1,65 @@
-importScripts("/wiregasm.js");
-
-const fetchBuffer = async (url) => {
-  const response = await fetch(url);
-  return await response.arrayBuffer();
-};
-
+/* Classic worker: all runtime paths are relative to the host-provided asset base. */
 let sharky = null;
 let session = null;
+let filePath = null;
 
-loadWiregasm({
-  locateFile: (path, prefix) => {
-    console.log("locateFile", path, prefix);
-    if (path.endsWith(".data")) return "/wiregasm.bmp";
-    if (path.endsWith(".wasm")) return "/wiregasm.wasm";
-    return prefix + path;
-  },
-})
-  .then((result) => {
-    result.init();
-    sharky = result;
-    console.log(sharky);
-    const columns = vecToArray(sharky.getColumns());
-    postMessage({ type: "init", columns, success: true });
-  })
-  .catch((error) => {
-    console.log({ type: "init", error, success: false });
-  });
-
-const vecToArray = (vec) =>
-  Array.from({ length: vec.size() }, (_, i) => vec.get(i));
-
+const vecToArray = (vec) => Array.from({ length: vec.size() }, (_, i) => vec.get(i));
 const devectorize = (obj) => {
   if (obj === null) return null;
-
-  if (obj?.constructor?.name?.startsWith("Vector"))
-    // need to devectorize again because of nested Vectors
-    obj = devectorize(vecToArray(obj));
-
-  // check if iterable
-  if (obj?.entries?.()?.[Symbol.iterator] === "function")
-    for (const [i, item] of obj.entries()) obj[i] = devectorize(item);
-  else if (typeof obj === "object")
-    for (const [i, item] of Object.entries(obj)) obj[i] = devectorize(item);
-
+  if (obj?.constructor?.name?.startsWith("Vector")) obj = devectorize(vecToArray(obj));
+  else if (Array.isArray(obj)) obj = obj.map(devectorize);
+  else if (typeof obj === "object") {
+    for (const [key, value] of Object.entries(obj)) obj[key] = devectorize(value);
+  }
   return obj;
+};
+const close = () => {
+  session?.delete();
+  session = null;
+  if (filePath) {
+    try { sharky.FS.unlink(filePath); } catch { /* Already removed by the engine. */ }
+    filePath = null;
+  }
 };
 
 self.addEventListener("message", async ({ data }) => {
-  console.debug("ahoy, worker got a message", data);
-
-  if (data.type === "frame") {
-    const frame = devectorize(session.getFrame(data.number));
-    return postMessage({
-      id: data.id,
-      frame,
-    });
-  }
-
-  if (data.type === "frames") {
-    const framesVec = session.getFrames(
-      data.filter ?? "",
-      data.skip ?? 0,
-      data.limit ?? 0
-    );
-    const frames = devectorize(framesVec.frames);
-
-    return postMessage({
-      id: data.id,
-      frames,
-    });
-  }
-
-  if (data.type === "find") {
-    return postMessage({
-      id: data.id,
-      result: session.findFrame(data.params),
-    });
-  }
-
-  if (data.type === "check-filter") {
-    return postMessage({
-      id: data.id,
-      result: sharky.checkFilter(data.filter),
-    });
-  }
-
-  if (data.type === "open") {
-    const filePath = `/uploads/${data.file.name}`;
-    const arrayBuffer = await data.file.arrayBuffer();
-    sharky.FS.writeFile(filePath, new Uint8Array(arrayBuffer));
-
-    session = new sharky.DissectSession(filePath);
-    console.log("created session");
-
-    const result = session.load();
-    console.log("loaded", result);
-
-    return postMessage({
-      id: data.id,
-      result,
-    });
-  }
-
-  if (data.type === "close") {
-    session?.delete();
-    session = null;
-    return postMessage({
-      id: data.id,
-      success: true,
-    });
+  try {
+    if (data.type === "init") {
+      const base = new URL(data.assetsBaseUrl);
+      importScripts(new URL("wiregasm.js", base).href);
+      sharky = await loadWiregasm({
+        locateFile: (path) => new URL(path.endsWith(".data") ? "wiregasm.bmp" : path, base).href,
+      });
+      sharky.init();
+      postMessage({ type: "init", columns: vecToArray(sharky.getColumns()), success: true });
+      return;
+    }
+    if (!sharky) throw new Error("The packet engine is not ready");
+    let response;
+    if (data.type === "open") {
+      close();
+      filePath = "/uploads/capture.pcap";
+      sharky.FS.writeFile(filePath, new Uint8Array(await data.file.arrayBuffer()));
+      session = new sharky.DissectSession(filePath);
+      const result = session.load();
+      if (result.code) close();
+      response = { result };
+    } else if (data.type === "close") { close(); response = { success: true }; }
+    else if (data.type === "check-filter") response = { result: sharky.checkFilter(data.filter) };
+    else {
+      if (!session) throw new Error("No capture is open");
+      if (data.type === "frame") response = { frame: devectorize(session.getFrame(data.number)) };
+      else if (data.type === "frames") response = { frames: devectorize(session.getFrames(data.filter ?? "", data.skip ?? 0, data.limit ?? 0).frames) };
+      else if (data.type === "find") response = { result: devectorize(session.findFrame(data.params)) };
+      else throw new Error("Unsupported packet operation");
+    }
+    postMessage({ id: data.id, ...response });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (data.type === "init") postMessage({ type: "init", success: false, error: message });
+    else {
+      if (data.type === "open") close();
+      postMessage({ id: data.id, error: message });
+    }
   }
 });
