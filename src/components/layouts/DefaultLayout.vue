@@ -34,12 +34,12 @@ const tabKeydown = (event, index) => {
         :aria-selected="activePane === index" :tabindex="activePane === index ? 0 : -1"
         @click="activePane = index" @keydown="tabKeydown($event, index)">{{ pane }}</button>
     </div>
-    <div class="wv-top wv-panel" :id="`${id}-panel-0`" :aria-label="panes[0]" :style="{ height: state.firstPaneHeight + '%' }"><slot name="slot1" /></div>
+    <div class="wv-top wv-panel" role="tabpanel" :aria-labelledby="`${id}-tab-0`" :id="`${id}-panel-0`" :aria-label="panes[0]" :style="{ height: state.firstPaneHeight + '%' }"><slot name="slot1" /></div>
     <div class="wv-v-resize" @pointerdown.prevent="handleVResize"></div>
     <div class="wv-bottom">
-      <div class="wv-first wv-panel needs-border-bottom" :id="`${id}-panel-1`" :aria-label="panes[1]" :style="{ width: state.secondPaneWidth + '%' }"><slot name="slot2" /></div>
+      <div class="wv-first wv-panel needs-border-bottom" role="tabpanel" :aria-labelledby="`${id}-tab-1`" :id="`${id}-panel-1`" :aria-label="panes[1]" :style="{ width: state.secondPaneWidth + '%' }"><slot name="slot2" /></div>
       <div class="wv-h-resize" @pointerdown.prevent="handleHResize"></div>
-      <div class="wv-second wv-panel needs-border-bottom" :id="`${id}-panel-2`" :aria-label="panes[2]"><slot name="slot3" /></div>
+      <div class="wv-second wv-panel needs-border-bottom" role="tabpanel" :aria-labelledby="`${id}-tab-2`" :id="`${id}-panel-2`" :aria-label="panes[2]"><slot name="slot3" /></div>
     </div>
   </div>
 </template>

@@ -16,6 +16,7 @@ export function createWireview(element, { embedded = false, theme = "auto", asse
   const options = reactive({ embedded, theme, error: "" });
   let destroyed = false;
   const app = createApp(App);
+  app.config.idPrefix = `wv-${crypto.randomUUID()}`;
   app.provide(managerKey, manager);
   app.provide(optionsKey, options);
   app.config.errorHandler = (error) => { if (!destroyed) options.error = error.message; };

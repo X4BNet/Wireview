@@ -4,7 +4,7 @@ import { useId } from "vue";
 const gradientId = useId();
 </script>
 <template>
-  <svg height="16" width="16" view-box="0 0 16 16">
+  <svg height="16" width="16" viewBox="0 0 16 16">
     <radialGradient
       :id="gradientId"
       cx="3.776183"
@@ -17,13 +17,13 @@ const gradientId = useId();
       <stop
         offset="1"
         stop-opacity=".309645"
-        style="stop-color: #000000; stop-opacity: 0.24705882"
+        style="stop-color: currentColor; stop-opacity: 0.24705882"
       />
     </radialGradient>
     <rect
       style="
-        fill: #0c0000;
-        stroke: #000000;
+        fill: currentColor;
+        stroke: currentColor;
         stroke-linecap: round;
         stroke-opacity: 1;
         fill-opacity: 1;
@@ -38,7 +38,7 @@ const gradientId = useId();
     <path
       style="
         fill: none;
-        stroke: #000000;
+        stroke: currentColor;
         stroke-linecap: round;
         stroke-linejoin: round;
         stroke-opacity: 1;
@@ -46,12 +46,12 @@ const gradientId = useId();
       d="M 5.0650002,4.688002 A 2.3258973,2.3258973 0 0 1 7.845173,3.2474687"
     />
     <path
-      style="fill: none; stroke: #000000; stroke-width: 2; stroke-opacity: 1"
+      style="fill: none; stroke: currentColor; stroke-width: 2; stroke-opacity: 1"
       d="m 9.2089838,9 c 0.715675,1.2396 0.715675,1.2396 0.715675,1.2396"
     />
     <circle
       :fill="`url(#${gradientId})`"
-      style="stroke: #000000; stroke-linecap: round; stroke-opacity: 1"
+      style="stroke: currentColor; stroke-linecap: round; stroke-opacity: 1"
       transform="rotate(-30)"
       r="3.8213789"
       cy="8.2449293"
