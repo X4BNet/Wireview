@@ -2,7 +2,6 @@
 import { computed, reactive } from "vue";
 import { useManager } from "../globals";
 const manager = useManager();
-import GitHubIcon from "./icons/GitHubIcon.vue";
 import { useInterval } from "../composables.js";
 
 const state = reactive({
@@ -59,41 +58,21 @@ useInterval(updateLoader, 1000);
 <template>
   <div class="status-bar">
     <div>{{ state.bridgeLoader || "Wireview · Wireshark" }}</div>
-    <div style="flex-grow: 1"></div>
-    <div>
-      {{ state.packetCountInfo }}
-    </div>
-    <div style="flex-grow: 1"></div>
-    <a
-      class="github"
-      href="https://github.com/X4BNet/Wireview"
-      aria-label="Visit the Wireview project page on GitHub"
-      target="_blank"
-    >
-      <GitHubIcon />
-    </a>
+    <div>{{ state.packetCountInfo }}</div>
   </div>
 </template>
 
 <style scoped>
 .status-bar {
   display: flex;
+  justify-content: space-between;
+  align-items: center;
   padding: 6px 10px;
-  gap: 8px;
+  gap: 4px 12px;
   flex-shrink: 0;
   flex-wrap: wrap;
   font-size: 12px;
   color: var(--ws-muted);
   border-top: var(--ws-pane-border);
-}
-.github {
-  display: flex;
-  min-width: 0;
-  min-height: 0;
-  height: 16px;
-  overflow: hidden;
-}
-.github svg {
-  height: 16px;
 }
 </style>

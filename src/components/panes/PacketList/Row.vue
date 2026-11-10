@@ -15,6 +15,9 @@ const { frame, index } = defineProps({
   },
 });
 
+/** Read columns by their engine label, retaining packet data in the compact layout. */
+const column = name => frame.columns[manager.columns.indexOf(name)] ?? '';
+
 const state = reactive({
   // refs
   rowRef: useTemplateRef("row"),
@@ -56,8 +59,13 @@ watch(() => manager.activeFrameNumber, checkAndFocus, { flush: "post" });
     :data-frame-index="index"
     :tabindex="frame.number === manager.activeFrameNumber ? 0 : -1"
   >
-    <div v-for="(_, index) in frame.columns">
+    <div class="wv-desktop-cell" v-for="(_, index) in frame.columns">
       <div class="text">{{ frame.columns[index] }}</div>
+    </div>
+    <div class="wv-mobile-summary">
+      <div class="wv-packet-meta"><strong>#{{ frame.number }} · {{ column('Protocol') }}</strong><span>{{ column('Time') }} s · {{ column('Length') }} B</span></div>
+      <div class="wv-packet-addresses"><span>{{ column('Source') }}</span><span class="wv-address-arrow" aria-label="to">→</span><span>{{ column('Destination') }}</span></div>
+      <div class="wv-packet-info">{{ column('Info') }}</div>
     </div>
   </div>
 </template>
@@ -96,33 +104,49 @@ watch(() => manager.activeFrameNumber, checkAndFocus, { flush: "post" });
   white-space: nowrap;
 }
 
-.wv-row > div { flex-shrink: 0; }
+.wv-row > .wv-desktop-cell { flex-shrink: 0; display: flex; align-items: center; }
+.wv-mobile-summary { display: none; }
 
 /* Assumes that the first column is the No. column */
-.wv-row > div:first-child {
+.wv-row > .wv-desktop-cell:first-child {
   text-align: right;
+  justify-content: flex-end;
 }
 
 /* TODO: Generate this ?? */
-.wv-row > div:nth-child(1) {
+.wv-row > .wv-desktop-cell:nth-child(1) {
   width: var(--ws-col0-width);
 }
-.wv-row > div:nth-child(2) {
+.wv-row > .wv-desktop-cell:nth-child(2) {
   width: var(--ws-col1-width);
 }
-.wv-row > div:nth-child(3) {
+.wv-row > .wv-desktop-cell:nth-child(3) {
   width: var(--ws-col2-width);
 }
-.wv-row > div:nth-child(4) {
+.wv-row > .wv-desktop-cell:nth-child(4) {
   width: var(--ws-col3-width);
 }
-.wv-row > div:nth-child(5) {
+.wv-row > .wv-desktop-cell:nth-child(5) {
   width: var(--ws-col4-width);
 }
-.wv-row > div:nth-child(6) {
+.wv-row > .wv-desktop-cell:nth-child(6) {
   width: var(--ws-col5-width);
 }
-.wv-row > div:nth-child(7) {
+.wv-row > .wv-desktop-cell:nth-child(7) {
   width: var(--ws-col6-width);
+}
+</style>
+
+<style scoped>
+@media (max-width: 767px) {
+  .wv-row { display: block; width: 100%; height: auto; border-bottom: var(--ws-pane-border); }
+  .wv-row > .wv-desktop-cell { display: none; }
+  .wv-row .wv-mobile-summary { display: grid; gap: 4px; width: 100%; min-width: 0; padding: 8px 10px; font-size: 12px; line-height: 1.4; }
+  .wv-packet-meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 8px; min-width: 0; font-size: 11px; }
+  .wv-packet-meta strong { font-weight: 600; }
+  .wv-packet-addresses { display: flex; align-items: flex-start; gap: 8px; min-width: 0; }
+  .wv-packet-addresses > span:not(.wv-address-arrow) { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  .wv-address-arrow { flex-shrink: 0; }
+  .wv-packet-info { min-width: 0; white-space: normal; overflow-wrap: anywhere; }
 }
 </style>

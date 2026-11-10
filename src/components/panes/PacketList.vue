@@ -5,12 +5,13 @@ import {
   shallowReactive,
   useTemplateRef,
   watch,
-  onBeforeUnmount,
 } from "vue";
-import { useResizeObserver, useScroll, watchThrottled } from "@vueuse/core";
+import { useMediaQuery, useResizeObserver, useScroll, watchThrottled } from "@vueuse/core";
 import { areArraysEqual, clamp } from "../../util";
 import { useManager } from "../../globals";
 const manager = useManager();
+import MobilePacketList from "./PacketList/MobilePacketList.vue";
+const mobile = useMediaQuery("(max-width: 767px)");
 import Minimap from "./PacketList/Minimap.vue";
 import PacketTable from "./PacketList/PacketTable.vue";
 import PacketTableRows from "./PacketList/PacketTableRows.vue";
@@ -174,7 +175,8 @@ watch(
 </script>
 
 <template>
-  <div
+  <MobilePacketList v-if="mobile" />
+  <div v-else
     class="packet-list-scrollable"
     ref="packet-list-scrollable"
   >

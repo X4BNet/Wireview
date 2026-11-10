@@ -51,7 +51,7 @@ onBeforeUnmount(() =>
         :placeholder="
           manager.displayFilter
             ? `Current filter: ${manager.displayFilter}`
-            : 'Apply a display filter ... <Ctrl-/>'
+            : 'Display filter (e.g. tcp)'
         "
         :disabled="!manager.sessionInfo"
         :style="{
@@ -79,64 +79,18 @@ onBeforeUnmount(() =>
   </div>
 </template>
 <style scoped>
-.filter-container {
-  display: flex;
-  padding: 4px;
-  border-top: var(--ws-pane-border);
-  border-bottom: var(--ws-pane-border);
-}
-.filter-container .filter-bar {
-  flex-grow: 1;
-
-  display: flex;
-  background-color: var(--ws-almost-white);
-  border: var(--ws-pane-border);
-  border-radius: 3px;
-  overflow: hidden;
-}
-.filter-container.disabled .filter-bar {
-  filter: saturate(0);
-  border: var(--ws-pane-border);
-  opacity: 0.75;
-  pointer-events: none;
-}
-.filter-container .filter-bar input[type="text"] {
-  flex-grow: 1;
-  width: 0;
-  color: var(--ws-fg);
-  outline: none;
-  border: none;
-  background-color: var(--ws-display-filter-bg);
-  padding: 1px 4px;
-}
-.apply-filter {
-  border: none;
-  background: none;
-  padding: 0;
-  outline: none;
-
-  min-width: 32px;
-  height: 28px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  align-self: center;
-  margin: 0 5px;
-  filter: none;
-  opacity: 0.9;
-}
-.apply-filter:disabled {
-  pointer-events: none;
-  filter: grayscale(100%);
-  opacity: 0.4;
-}
-.apply-filter:hover {
-  filter: brightness(1.25);
-}
-.apply-filter:active {
-  filter: brightness(1);
-}
-.apply-filter svg {
-  height: 100%;
+.filter-container { display: flex; flex-shrink: 0; min-width: 0; padding: 6px 8px; border-top: var(--ws-pane-border); border-bottom: var(--ws-pane-border); }
+.filter-bar { display: flex; align-items: stretch; flex: 1; min-width: 0; width: 100%; height: 38px; background: var(--ws-almost-white); border: var(--ws-pane-border); border-radius: 4px; overflow: hidden; }
+.filter-container.disabled .filter-bar { opacity: .6; pointer-events: none; }
+.filter-container .filter-bar input[type="text"] { flex: 1 1 0%; min-width: 0; min-height: 0; width: 100%; height: 100%; margin: 0; padding: 6px 10px; border: 0; border-radius: 0; outline: none; background: var(--ws-display-filter-bg); color: var(--ws-fg); font: 14px/22px var(--ws-font-family-monospace); }
+.filter-bar:focus-within { border-color: var(--ws-selected-bg); }
+.apply-filter { flex: 0 0 36px; width: 36px; min-width: 36px; min-height: 0; height: 100%; margin: 0; padding: 0; display: flex; align-items: center; justify-content: center; border: 0; border-left: var(--ws-pane-border); border-radius: 0; background: var(--ws-light-gray); color: var(--ws-fg); }
+.apply-filter svg { display: block; flex: none; width: 20px; height: 14px; }
+.apply-filter:disabled { opacity: .45; }
+.apply-filter:hover:not(:disabled) { background: var(--ws-gray); }
+@media (max-width: 767px) {
+  .filter-bar { height: 46px; }
+  .filter-container .filter-bar input[type="text"] { font-size: 16px; padding: 10px; }
+  .apply-filter { flex-basis: 44px; width: 44px; min-width: 44px; }
 }
 </style>

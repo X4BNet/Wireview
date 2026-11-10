@@ -78,6 +78,6 @@
 .wireview .wv-error { color: var(--ws-fg); background: var(--ws-ugly-red); }
 .wireview .wv-loading { flex: 1; display: grid; place-content: center; }
 @media (max-width: 767px) {
-  .wireview { --ws-row-height: 40px !important; --ws-font-size-monospace: 13px !important; font-size: 14px; }
+  .wireview { --ws-font-size-monospace: 13px !important; font-size: 14px; }
   .wireview button, .wireview select, .wireview input[type="text"] { min-height: 44px; }
 }

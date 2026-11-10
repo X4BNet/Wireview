@@ -22,11 +22,11 @@ Install `@x4bnet/wireview` from `https://npm.pkg.github.com`, configuring `@x4bn
 Bundle the library import, load the exported `@x4bnet/wireview/style.css`, and copy `dist/assets/` to a versioned, same-origin static directory. The host element must have a defined height.
 
 ```js
-import { createWireview } from '@x4bnet/wireview';
+import { createWireview, version } from '@x4bnet/wireview';
 const viewer = createWireview(document.getElementById('capture'), {
   embedded: true,
   theme: 'dark', // light, dark, or auto (OS preference)
-  assetsBaseUrl: '/js/wireview/0.1.0/assets/',
+  assetsBaseUrl: `/js/wireview/${version}/assets/`,
 });
 await viewer.ready;
 await viewer.openFile(new File([captureBytes], 'capture.pcap'));
@@ -35,7 +35,7 @@ viewer.setTheme('light');
 viewer.destroy();
 ```
 
-Each viewer owns its own engine, state, observers, timers and event listeners. `ready` and `openFile` reject on initialization/parse failures or destruction. `destroy()` is idempotent. Embedded mode removes file-opening and welcome UI, retaining filtering, packet search, navigation and inspection. Mobile screens below 768px use Packets, Details and Bytes tabs without discarding pane state. Desktop retains resizable panes. CSS is scoped beneath `.wireview` and theme colors are shared by packet rows and the minimap.
+Each viewer owns its own engine, state, observers, timers and event listeners. `ready` and `openFile` reject on initialization/parse failures or destruction. `destroy()` is idempotent. Embedded mode removes file-opening and welcome UI, retaining filtering, packet search, navigation and inspection. Mobile screens below 768px use Packets, Details and Bytes tabs without discarding pane state. Packet cards wrap within the mobile viewport and large captures use pages of 50 packets. Desktop retains resizable panes. CSS is scoped beneath `.wireview` and theme colors are shared by packet rows and the minimap.
 
 Serve `.wasm` with `application/wasm`, permit same-origin workers, and deploy all runtime files together. The host fetches the capture using its own authentication; the library accepts a `File` and never fetches or uploads capture data itself.
 
